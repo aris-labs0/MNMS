@@ -15,7 +15,7 @@ export default function ViewTokenModal({ token }: ViewTokenModalProps) {
 
   const ACCES_KEY = `${env.NEXT_PUBLIC_BACKEND_URL}/${token}`
 
-  const tokenSnippet = `/tool/fetch url=${ACCES_KEY} /dst-path=onboarding.rsc\n/import onboarding.rsc`;
+  const tokenSnippet = `/tool/fetch url=${ACCES_KEY} dst-path=onboarding.rsc\n/import onboarding.rsc`;
 
   const copyToClipboard = async () => {
     try {
