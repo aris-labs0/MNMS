@@ -3,9 +3,9 @@ import {
   idKeySchema, 
   updateKeySchema,
   idsKeySchema
-} from "../../schema"
+} from "@mnms/db/types"
 import { createTRPCRouter, protectProcedure } from "@/trpc/api/trpc"
-import { keys } from "@/db/schema"
+import { keys } from "@mnms/db/schema"
 import { eq ,inArray} from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
 

@@ -37,6 +37,6 @@
 		"**/*.cjs",
 		"**/*.js",
 		".next/types/**/*.ts"
-, "postcss.config.mjs"	],
+, "postcss.config.mjs", "../../packages/db/src/types/keys.ts"	],
 	"exclude": ["node_modules"]
 }

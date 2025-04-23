@@ -1,6 +1,6 @@
 import {betterAuth} from 'better-auth';
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@/db";
+import { db } from "@mnms/db";
 import { admin } from "better-auth/plugins"
 
 
