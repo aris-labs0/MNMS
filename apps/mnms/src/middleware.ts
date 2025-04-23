@@ -1,7 +1,7 @@
 import { betterFetch } from "@better-fetch/fetch";
 import type { auth } from "@/lib/auth";
 import { NextResponse, type NextRequest } from "next/server";
-import { db } from "@mnms/db";
+import { db } from "../../../packages/db/src/edge";
 
 
 type Session = typeof auth.$Infer.Session;
@@ -18,6 +18,10 @@ export default async function authMiddleware(request: NextRequest) {
 		},
 	);
 
+
+
+
+	
 	if (error) { 
 		return NextResponse.redirect(new URL("/not-found", request.url));
 	}

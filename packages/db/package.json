@@ -22,11 +22,13 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.0",
+    "dotenv": "^16.4.7",
     "drizzle-orm": "^0.41.0",
     "zod": "^3.24.2"
   },
   "exports": {
-    ".": "./src/index.ts",
+    ".": "./src/node.ts",
+    "./edge": "./src/edge.ts",
     "./schema": "./src/schema/index.ts",
     "./types": "./src/types/index.ts",
     "./drizzle.config.ts": "./src/drizzle.config.ts"

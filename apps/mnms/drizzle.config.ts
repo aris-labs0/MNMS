@@ -1,1 +1,0 @@
-import "@mnms/db/drizzle.config.ts"
