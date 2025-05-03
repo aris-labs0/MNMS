@@ -1,27 +1,19 @@
-import { 
-  createKeySchema, 
-  idKeySchema, 
-  updateKeySchema,
-  idsKeySchema
-} from "@mnms/db/types"
+import { zkeysSchema } from "@mnms/db/zod-schemas"
 import { createTRPCRouter, protectProcedure } from "@/trpc/api/trpc"
-import { keys } from "@mnms/db/schema"
-import { eq ,inArray} from "drizzle-orm"
 import { TRPCError } from "@trpc/server"
+import { 
+  createKey, 
+  updateKey, 
+  deleteKey, 
+  deleteManyKeys } from "@mnms/db/mutations"
+  import { getKeyById, getAllKeys} from "@mnms/db/queries"
 
 export const keysRouter = createTRPCRouter({
-  create: protectProcedure.input(createKeySchema).mutation(async ({ input, ctx }) => {
+  create: protectProcedure.input(zkeysSchema.createKeySchema).mutation(async ({ input, ctx }) => {
     try {
-      const [createdKey] = await ctx.db
-        .insert(keys)
-        .values({
-          name: input.name,
-          expire: input.expire,
-          expiration_time: input.expiration_time,
-          device_unlimited: input.device_unlimited,
-          max_devices: input.max_devices,
-        })
-        .returning()
+      const createdKey = await createKey(ctx.db, {
+        ...input
+      })
 
       if (!createdKey) {
         throw new TRPCError({
@@ -42,19 +34,11 @@ export const keysRouter = createTRPCRouter({
     }
   }),
 
-  update: protectProcedure.input(updateKeySchema).mutation(async ({ input, ctx }) => {
+  update: protectProcedure.input(zkeysSchema.updateKeySchema).mutation(async ({ input, ctx }) => {
     try {
-      const [updatedKey] = await ctx.db
-        .update(keys)
-        .set({
-          name: input.name,
-          expire: input.expire,
-          expiration_time: input.expiration_time,
-          device_unlimited: input.device_unlimited,
-          max_devices: input.max_devices,
-        })
-        .where(eq(keys.id, input.id))
-        .returning()
+      const updatedKey = await updateKey(ctx.db,  {
+        ...input
+      })
 
       if (!updatedKey) {
         throw new TRPCError({
@@ -75,10 +59,9 @@ export const keysRouter = createTRPCRouter({
     }
   }),
 
-  delete: protectProcedure.input(idKeySchema).mutation(async ({ input, ctx }) => {
+  delete: protectProcedure.input(zkeysSchema.idKeySchema).mutation(async ({ input, ctx }) => {
     try {
-      const [deletedKey] = await ctx.db.delete(keys).where(eq(keys.id, input.id)).returning()
-
+      const deletedKey = await deleteKey(ctx.db, input.id)
       if (!deletedKey) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -97,32 +80,32 @@ export const keysRouter = createTRPCRouter({
       })
     }
   }),
-  deleteMany: protectProcedure.input(idsKeySchema).mutation(async ({ input, ctx }) => {
-    try {
-      const [deletedKey] = await ctx.db.delete(keys).where(inArray(keys.id, input.ids)).returning()
 
-      if (!deletedKey) {
+  deleteMany: protectProcedure.input(zkeysSchema.idsKeySchema).mutation(async ({ input, ctx }) => {
+    try {
+      const deletedKeys = await deleteManyKeys(ctx.db, input.ids)
+      if (!deletedKeys.length) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: `Key not found`,
+          message: `Keys not found`,
         })
       }
 
-      return deletedKey
+      return deletedKeys[0] 
     } catch (error) {
       if (error instanceof TRPCError) throw error
 
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "An unexpected error occurred while deleting the key",
+        message: "An unexpected error occurred while deleting the keys",
         cause: error,
       })
     }
   }),
 
-  getById: protectProcedure.input(idKeySchema).query(async ({ input, ctx }) => {
+  getById: protectProcedure.input(zkeysSchema.idKeySchema).query(async ({ input, ctx }) => {
     try {
-      const [key] = await ctx.db.select().from(keys).where(eq(keys.id, input.id))
+      const key = await getKeyById(ctx.db,input.id)
 
       if (!key) {
         throw new TRPCError({
@@ -145,7 +128,7 @@ export const keysRouter = createTRPCRouter({
 
   getKeys: protectProcedure.query(async ({ ctx }) => {
     try {
-      const allKeys = await ctx.db.query.keys.findMany()
+      const allKeys = await getAllKeys(ctx.db)
       return allKeys
     } catch (error) {
       throw new TRPCError({

@@ -15,9 +15,9 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Switch } from "@/components/ui/switch"
 import { DatePicker } from "@/components/ui/date-picker"
-import { api } from "@/trpc/react";
+import { api } from "@/trpc/react"
 
-export default function createKeyModal() {
+export default function CreateKeyModal() {
   const { toast } = useToast()
   const id = useId()
   const [isLoading, setIsLoading] = useState(false)
@@ -40,36 +40,46 @@ export default function createKeyModal() {
   }
 
   const mutation = api.keys.create.useMutation({
-    onSettled:()=>{
+    onSettled: () => {
       utils.keys.getKeys.invalidate()
       setOpen(false)
       setIsLoading(false)
       resetForm()
     },
-    onSuccess:()=>{
+    onSuccess: () => {
       toast({
         title: "Key created successfully",
         description: `Key "${name}" has been created.`,
       })
     },
-    onError:()=>{
+    onError: () => {
       toast({
         title: "Failed to create key",
         description: "An error occurred while creating the key.",
         variant: "destructive",
       })
-    }
+    },
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (expire && !expirationTime) {
+      toast({
+        title: "Date required",
+        description: "Please select an expiration date.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
+
+
     mutation.mutate({
       name: name,
-      expire: expire,
-      expiration_time: expirationTime ,
-      device_unlimited: deviceUnlimited,
-      max_devices: maxDevices
+      max_devices: deviceUnlimited ? null : maxDevices,
+      expiration_time: expire && expirationTime ? expirationTime : null
     })
   }
 
@@ -105,8 +115,10 @@ export default function createKeyModal() {
 
             {expire && (
               <div className="mt-2">
-                <Label htmlFor={`expiration-time-${id}`}>Expiration Date</Label>
-                <DatePicker date={expirationTime} setDate={setExpirationTime} className="w-full" />
+                <Label htmlFor={`expiration-time-${id}`}>
+                  Expiration Date <span className="text-destructive">*</span>
+                </Label>
+                <DatePicker date={expirationTime} setDate={setExpirationTime} className="w-full"  />
               </div>
             )}
 
@@ -133,7 +145,7 @@ export default function createKeyModal() {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full" disabled={isLoading || (expire && !expirationTime)}>
             {isLoading ? "Creating..." : "Create Key"}
           </Button>
         </form>
@@ -141,4 +153,3 @@ export default function createKeyModal() {
     </Dialog>
   )
 }
-
