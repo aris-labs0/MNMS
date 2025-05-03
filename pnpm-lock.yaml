@@ -26,13 +26,25 @@ importers:
       '@mnms/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@mnms/influx':
+        specifier: workspace:*
+        version: link:../../packages/influx
       dotenv:
         specifier: ^16.4.7
         version: 16.5.0
+      drizzle-orm:
+        specifier: ^0.41.0
+        version: 0.41.0(@neondatabase/serverless@1.0.0)(@types/pg@8.11.13)(bun-types@1.2.10)(gel@2.0.2)(kysely@0.27.6)(postgres@3.4.5)
       hono:
         specifier: ^4.7.7
         version: 4.7.7
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
     devDependencies:
+      '@types/lodash':
+        specifier: ^4.17.16
+        version: 4.17.16
       '@types/node':
         specifier: ^20.11.17
         version: 20.17.30
@@ -223,6 +235,9 @@ importers:
       drizzle-orm:
         specifier: ^0.41.0
         version: 0.41.0(@neondatabase/serverless@1.0.0)(@types/pg@8.11.13)(bun-types@1.2.10)(gel@2.0.2)(kysely@0.27.6)(postgres@3.4.5)
+      drizzle-zod:
+        specifier: ^0.7.1
+        version: 0.7.1(drizzle-orm@0.41.0(@neondatabase/serverless@1.0.0)(@types/pg@8.11.13)(bun-types@1.2.10)(gel@2.0.2)(kysely@0.27.6)(postgres@3.4.5))(zod@3.24.3)
       zod:
         specifier: ^3.24.2
         version: 3.24.3
@@ -272,6 +287,19 @@ importers:
       typescript-eslint:
         specifier: ^8.30.1
         version: 8.31.0(eslint@9.25.1(jiti@2.4.2))(typescript@5.8.2)
+
+  packages/influx:
+    dependencies:
+      '@influxdata/influxdb-client':
+        specifier: ^1.35.0
+        version: 1.35.0
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.5.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.2
+        version: 22.15.2
 
   packages/typescript-config: {}
 
@@ -1007,6 +1035,9 @@ packages:
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [win32]
+
+  '@influxdata/influxdb-client@1.35.0':
+    resolution: {integrity: sha512-woWMi8PDpPQpvTsRaUw4Ig+nOGS/CWwAwS66Fa1Vr/EkW+NEwxI8YfPBsdBMn33jK2Y86/qMiiuX/ROHIkJLTw==}
 
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
@@ -1781,6 +1812,9 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
+  '@types/lodash@4.17.16':
+    resolution: {integrity: sha512-HX7Em5NYQAXKW+1T+FiuG27NGwzJfCX3s1GjOa7ujxZa52kjJLOr4FUxT+giF6Tgxv1e+/czV/iTtBw27WTU9g==}
+
   '@types/minimatch@5.1.2':
     resolution: {integrity: sha512-K0VQKziLUWkVKiRVrx4a40iPaxTUefQmjtkQofBkYRcoaaL/8rhwDWww9qWbrgicNOgnpIsMxyNIUM4+n6dUIA==}
 
@@ -1789,6 +1823,9 @@ packages:
 
   '@types/node@22.14.1':
     resolution: {integrity: sha512-u0HuPQwe/dHrItgHHpmw3N2fYCR6x4ivMNbPHRkBVP4CvN+kiRrKHWk3i8tXiO/joPwXLMYvF9TTF0eqgHIuOw==}
+
+  '@types/node@22.15.2':
+    resolution: {integrity: sha512-uKXqKN9beGoMdBfcaTY1ecwz6ctxuJAcUlwE55938g0ZJ8lRxwAZqRz2AJ4pzpt5dHdTPMB863UZ0ESiFUcP7A==}
 
   '@types/pg@8.11.13':
     resolution: {integrity: sha512-6kXByGkvRvwXLuyaWzsebs2du6+XuAB2CuMsuzP7uaihQahshVgSmB22Pmh0vQMkQ1h5+PZU0d+Di1o+WpVWJg==}
@@ -2291,6 +2328,12 @@ packages:
         optional: true
       sqlite3:
         optional: true
+
+  drizzle-zod@0.7.1:
+    resolution: {integrity: sha512-nZzALOdz44/AL2U005UlmMqaQ1qe5JfanvLujiTHiiT8+vZJTBFhj3pY4Vk+L6UWyKFfNmLhk602Hn4kCTynKQ==}
+    peerDependencies:
+      drizzle-orm: '>=0.36.0'
+      zod: '>=3.0.0'
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -4385,6 +4428,8 @@ snapshots:
   '@img/sharp-win32-x64@0.34.1':
     optional: true
 
+  '@influxdata/influxdb-client@1.35.0': {}
+
   '@jridgewell/resolve-uri@3.1.2': {}
 
   '@jridgewell/sourcemap-codec@1.5.0': {}
@@ -5143,6 +5188,8 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/lodash@4.17.16': {}
+
   '@types/minimatch@5.1.2': {}
 
   '@types/node@20.17.30':
@@ -5150,6 +5197,10 @@ snapshots:
       undici-types: 6.19.8
 
   '@types/node@22.14.1':
+    dependencies:
+      undici-types: 6.21.0
+
+  '@types/node@22.15.2':
     dependencies:
       undici-types: 6.21.0
 
@@ -5425,7 +5476,7 @@ snapshots:
 
   bun-types@1.2.10:
     dependencies:
-      '@types/node': 22.14.1
+      '@types/node': 22.15.2
     optional: true
 
   busboy@1.6.0:
@@ -5671,6 +5722,11 @@ snapshots:
       gel: 2.0.2
       kysely: 0.27.6
       postgres: 3.4.5
+
+  drizzle-zod@0.7.1(drizzle-orm@0.41.0(@neondatabase/serverless@1.0.0)(@types/pg@8.11.13)(bun-types@1.2.10)(gel@2.0.2)(kysely@0.27.6)(postgres@3.4.5))(zod@3.24.3):
+    dependencies:
+      drizzle-orm: 0.41.0(@neondatabase/serverless@1.0.0)(@types/pg@8.11.13)(bun-types@1.2.10)(gel@2.0.2)(kysely@0.27.6)(postgres@3.4.5)
+      zod: 3.24.3
 
   dunder-proto@1.0.1:
     dependencies:
