@@ -23,9 +23,7 @@ import {TrashIcon,
 type Key = {
     id: string
     name: string
-    device_unlimited: boolean
     max_devices: number | null
-    expire: boolean
     expiration_time: Date | null
   }
 

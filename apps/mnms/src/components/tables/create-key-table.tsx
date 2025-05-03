@@ -31,7 +31,6 @@ import {
   ListFilterIcon,
   TimerIcon,
   TimerOffIcon,
-
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -58,13 +57,12 @@ import DeleteKeyModal from "../modals/keys/delete-key-modal"
 import UpdateKeyModal from "../modals/keys/update-key-modal"
 import DeleteManyModal from "../modals/keys/delete-many-keys-modal"
 import Spinner from "@/components/ui/spinner"
-import  ViewTokenModal from "../modals/keys/view-key-modal"
+import ViewTokenModal from "../modals/keys/view-key-modal"
+
 type Key = {
   id: string
   name: string
-  device_unlimited: boolean
   max_devices: number | null
-  expire: boolean
   expiration_time: Date | null
 }
 
@@ -75,18 +73,18 @@ const nameFilterFn: FilterFn<Key> = (row, columnId, filterValue) => {
   return name.toLowerCase().includes(searchTerm)
 }
 
-// Filter function for expiration status
+// Filter function for expiration status - adaptado al nuevo modelo
 const expirationFilterFn: FilterFn<Key> = (row, columnId, filterValue: string[]) => {
   if (!filterValue?.length) return true
-  const expire = row.original.expire
-  return filterValue.includes(expire ? "Expires" : "No Expiration")
+  const hasExpiration = row.original.expiration_time !== null
+  return filterValue.includes(hasExpiration ? "Expires" : "No Expiration")
 }
 
-// Filter function for device limit status
+// Filter function for device limit status - adaptado al nuevo modelo
 const deviceLimitFilterFn: FilterFn<Key> = (row, columnId, filterValue: string[]) => {
   if (!filterValue?.length) return true
-  const deviceUnlimited = row.original.device_unlimited
-  return filterValue.includes(deviceUnlimited ? "Unlimited" : "Limited")
+  const isUnlimited = row.original.max_devices === null
+  return filterValue.includes(isUnlimited ? "Unlimited" : "Limited")
 }
 
 const columns: ColumnDef<Key>[] = [
@@ -113,20 +111,16 @@ const columns: ColumnDef<Key>[] = [
   {
     header: "Name",
     accessorKey: "name",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2 font-medium">
-        {row.getValue("name")}
-      </div>
-    ),
+    cell: ({ row }) => <div className="flex items-center gap-2 font-medium">{row.getValue("name")}</div>,
     size: 220,
     filterFn: nameFilterFn,
     enableHiding: false,
   },
   {
     header: "Device Limit",
-    accessorKey: "device unlimited",
+    accessorKey: "device limit",
     cell: ({ row }) => {
-      const isUnlimited = row.original.device_unlimited
+      const isUnlimited = row.original.max_devices === null
       return (
         <div className="flex items-center gap-2">
           {isUnlimited ? (
@@ -146,9 +140,9 @@ const columns: ColumnDef<Key>[] = [
   },
   {
     header: "Expiration",
-    accessorKey: "expire",
+    accessorKey: "expiration",
     cell: ({ row }) => {
-      const expires = row.original.expire
+      const expires = row.original.expiration_time !== null
       return (
         <div>
           {expires ? (
@@ -171,7 +165,7 @@ const columns: ColumnDef<Key>[] = [
   {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }) => (   
+    cell: ({ row }) => (
       <div className="flex justify-end items-center gap-2 w-full">
         <ViewTokenModal token={row.id} />
         <RowActions row={row} />
@@ -200,7 +194,6 @@ export default function Component() {
     },
   ])
 
-  // Fetch data using tRPC
   const { data, isLoading, error } = api.keys.getKeys.useQuery()
 
   const handleDeleteRows = () => {
@@ -228,7 +221,7 @@ export default function Component() {
     onColumnVisibilityChange: setColumnVisibility,
     getFilteredRowModel: getFilteredRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    getRowId: row => row.id,
+    getRowId: (row) => row.id,
     state: {
       sorting,
       pagination,
@@ -249,18 +242,18 @@ export default function Component() {
 
   // Get selected expiration filters
   const selectedExpirationFilters = useMemo(() => {
-    const filterValue = table.getColumn("expire")?.getFilterValue() as string[]
+    const filterValue = table.getColumn("expiration")?.getFilterValue() as string[]
     return filterValue ?? []
-  }, [table.getColumn("expire")?.getFilterValue()])
+  }, [table.getColumn("expiration")?.getFilterValue()])
 
   // Get selected device limit filters
   const selectedDeviceLimitFilters = useMemo(() => {
-    const filterValue = table.getColumn("device unlimited")?.getFilterValue() as string[]
+    const filterValue = table.getColumn("device limit")?.getFilterValue() as string[]
     return filterValue ?? []
-  }, [table.getColumn("device unlimited")?.getFilterValue()])
+  }, [table.getColumn("device limit")?.getFilterValue()])
 
   const handleExpirationFilterChange = (checked: boolean, value: string) => {
-    const filterValue = table.getColumn("expire")?.getFilterValue() as string[]
+    const filterValue = table.getColumn("expiration")?.getFilterValue() as string[]
     const newFilterValue = filterValue ? [...filterValue] : []
 
     if (checked) {
@@ -272,11 +265,11 @@ export default function Component() {
       }
     }
 
-    table.getColumn("expire")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined)
+    table.getColumn("expiration")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined)
   }
 
   const handleDeviceLimitFilterChange = (checked: boolean, value: string) => {
-    const filterValue = table.getColumn("device unlimited")?.getFilterValue() as string[]
+    const filterValue = table.getColumn("device limit")?.getFilterValue() as string[]
     const newFilterValue = filterValue ? [...filterValue] : []
 
     if (checked) {
@@ -288,7 +281,7 @@ export default function Component() {
       }
     }
 
-    table.getColumn("device unlimited")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined)
+    table.getColumn("device limit")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined)
   }
 
   if (isLoading) {
@@ -438,11 +431,9 @@ export default function Component() {
         </div>
         <div className="flex items-center gap-3">
           {/* Delete button */}
-          {table.getSelectedRowModel().rows.length > 0 && (
-            <DeleteManyModal rows={table.getSelectedRowModel().rows} />
-          )}
+          {table.getSelectedRowModel().rows.length > 0 && <DeleteManyModal rows={table.getSelectedRowModel().rows} />}
           {/* Add key button */}
-        <CreateKeyModal/>
+          <CreateKeyModal />
         </div>
       </div>
 
@@ -512,7 +503,6 @@ export default function Component() {
       <div className="flex items-center justify-between gap-8">
         {/* Results per page */}
         <div className="flex items-center gap-3">
-
           <Select
             value={table.getState().pagination.pageSize.toString()}
             onValueChange={(value) => {
@@ -609,7 +599,6 @@ export default function Component() {
           </Pagination>
         </div>
       </div>
-
     </div>
   )
 }
@@ -628,8 +617,18 @@ function RowActions({ row }: { row: Row<Key> }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuGroup>
-          <UpdateKeyModal id={row.id} onCloseDropdown={()=>{setOpenDropdownMenu(false)}}/>
-          <DeleteKeyModal id={row.id} onCloseDropdown={()=>{setOpenDropdownMenu(false)}}/>
+          <UpdateKeyModal
+            id={row.id}
+            onCloseDropdown={() => {
+              setOpenDropdownMenu(false)
+            }}
+          />
+          <DeleteKeyModal
+            id={row.id}
+            onCloseDropdown={() => {
+              setOpenDropdownMenu(false)
+            }}
+          />
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>

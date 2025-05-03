@@ -1,6 +1,6 @@
 "use client"
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -19,27 +19,71 @@ import { api } from "@/trpc/react"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 
 interface UpdateKeyDialogProps {
-  id: string,
+  id: string
   onCloseDropdown: () => void
 }
 
-export default function UpdateKeyDialog({ id,onCloseDropdown }: UpdateKeyDialogProps) {
+// Interface for original values
+interface OriginalValues {
+  name: string
+  hasExpiration: boolean
+  expirationTime: Date | undefined
+  isUnlimited: boolean
+  maxDevices: number
+}
+
+export default function UpdateKeyDialog({ id, onCloseDropdown }: UpdateKeyDialogProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  // Form state - initialize with default values
+  // Form state - adapted to the new model
   const [name, setName] = useState("")
-  const [expire, setExpire] = useState(false)
+  const [hasExpiration, setHasExpiration] = useState(false)
   const [expirationTime, setExpirationTime] = useState<Date | undefined>(undefined)
-  const [deviceUnlimited, setDeviceUnlimited] = useState(false)
+  const [isUnlimited, setIsUnlimited] = useState(false)
   const [maxDevices, setMaxDevices] = useState(1)
+
+  // State to store original values
+  const [originalValues, setOriginalValues] = useState<OriginalValues | null>(null)
 
   // Get the query client
   const utils = api.useUtils()
 
-  // Define the fetch function
+  // Function to check if there are changes
+  const hasChanges = useCallback(() => {
+    if (!originalValues) return false
+
+    // Compare current values with original ones
+    const nameChanged = name !== originalValues.name
+    const hasExpirationChanged = hasExpiration !== originalValues.hasExpiration
+
+    // If expiration status changed, consider it a change
+    if (nameChanged || hasExpirationChanged) return true
+
+    // If it has expiration, check if the date changed
+    if (hasExpiration) {
+      // If it originally had no date but now it does, or vice versa
+      if (!!expirationTime !== !!originalValues.expirationTime) return true
+
+      // If both have dates, compare them
+      if (expirationTime && originalValues.expirationTime) {
+        if (expirationTime.getTime() !== originalValues.expirationTime.getTime()) return true
+      }
+    }
+
+    // If unlimited status changed
+    if (isUnlimited !== originalValues.isUnlimited) return true
+
+    // If not unlimited, check if the number of devices changed
+    if (!isUnlimited && maxDevices !== originalValues.maxDevices) return true
+
+    // No changes
+    return false
+  }, [name, hasExpiration, expirationTime, isUnlimited, maxDevices, originalValues])
+
+  // Define the fetch function - adapted to the new model
   const fetchKeyData = async () => {
     if (!open || !id) return
 
@@ -47,11 +91,27 @@ export default function UpdateKeyDialog({ id,onCloseDropdown }: UpdateKeyDialogP
     try {
       const data = await utils.keys.getById.fetch({ id })
       if (data) {
-        setName(data.name || "")
-        setExpire(data.expire || false)
-        setExpirationTime(data.expiration_time || undefined)
-        setDeviceUnlimited(data.device_unlimited || false)
-        setMaxDevices(data.max_devices || 1)
+        const newName = data.name || ""
+        const hasExp = data.expiration_time !== null
+        const expTime = hasExp ? data.expiration_time || undefined : undefined
+        const unlimited = data.max_devices === null
+        const maxDevs = unlimited ? 1 : data.max_devices || 1
+
+        // Update form state
+        setName(newName)
+        setHasExpiration(hasExp)
+        setExpirationTime(expTime)
+        setIsUnlimited(unlimited)
+        setMaxDevices(maxDevs)
+
+        // Save original values
+        setOriginalValues({
+          name: newName,
+          hasExpiration: hasExp,
+          expirationTime: expTime,
+          isUnlimited: unlimited,
+          maxDevices: maxDevs,
+        })
       }
     } catch (error) {
       console.error("Error fetching key data:", error)
@@ -78,6 +138,7 @@ export default function UpdateKeyDialog({ id,onCloseDropdown }: UpdateKeyDialogP
       setOpen(false)
       // Invalidate the query to refresh the data
       utils.keys.getKeys.invalidate()
+      utils.keys.getById.invalidate()
     },
     onSuccess: () => {
       toast({
@@ -97,14 +158,27 @@ export default function UpdateKeyDialog({ id,onCloseDropdown }: UpdateKeyDialogP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     onCloseDropdown()
+
+    // Validate that a date is selected if expiration is enabled
+    if (hasExpiration && !expirationTime) {
+      toast({
+        title: "Date required",
+        description: "Please select an expiration date.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
+
+    // Adapted for the new table model:
+    // - If isUnlimited is true, send max_devices as null
+    // - If hasExpiration is false, send expiration_time as null
     mutate({
       id,
       name,
-      expire,
-      expiration_time: expirationTime,
-      device_unlimited: deviceUnlimited,
-      max_devices: maxDevices,
+      max_devices: isUnlimited ? null : maxDevices,
+      expiration_time: hasExpiration ? expirationTime : null,
     })
   }
 
@@ -113,17 +187,18 @@ export default function UpdateKeyDialog({ id,onCloseDropdown }: UpdateKeyDialogP
     // Reset form if closing
     if (!newOpen) {
       setName("")
-      setExpire(false)
+      setHasExpiration(false)
       setExpirationTime(undefined)
-      setDeviceUnlimited(false)
+      setIsUnlimited(false)
       setMaxDevices(1)
+      setOriginalValues(null)
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-      <DropdownMenuItem
+        <DropdownMenuItem
           onSelect={(e) => {
             e.preventDefault()
             setOpen(true)
@@ -192,13 +267,16 @@ export default function UpdateKeyDialog({ id,onCloseDropdown }: UpdateKeyDialogP
                   <Label htmlFor={`expire-${id}`}>Key Expiration</Label>
                   <p className="text-sm text-muted-foreground">Set if the key should expire</p>
                 </div>
-                <Switch id={`expire-${id}`} checked={expire} onCheckedChange={setExpire} />
+                <Switch id={`expire-${id}`} checked={hasExpiration} onCheckedChange={setHasExpiration} />
               </div>
 
-              {expire && (
+              {hasExpiration && (
                 <div className="mt-2">
-                  <Label htmlFor={`expiration-time-${id}`}>Expiration Date</Label>
-                  <DatePicker date={expirationTime} setDate={setExpirationTime} className="w-full" />
+                  <Label htmlFor={`expiration-time-${id}`}>
+                    Expiration Date <span className="text-destructive">*</span>
+                  </Label>
+                  <DatePicker date={expirationTime} setDate={setExpirationTime} className="w-full"  />
+ 
                 </div>
               )}
 
@@ -207,10 +285,10 @@ export default function UpdateKeyDialog({ id,onCloseDropdown }: UpdateKeyDialogP
                   <Label htmlFor={`device-unlimited-${id}`}>Unlimited Devices</Label>
                   <p className="text-sm text-muted-foreground">Allow unlimited device connections</p>
                 </div>
-                <Switch id={`device-unlimited-${id}`} checked={deviceUnlimited} onCheckedChange={setDeviceUnlimited} />
+                <Switch id={`device-unlimited-${id}`} checked={isUnlimited} onCheckedChange={setIsUnlimited} />
               </div>
 
-              {!deviceUnlimited && (
+              {!isUnlimited && (
                 <div className="*:not-first:mt-2">
                   <Label htmlFor={`max-devices-${id}`}>Maximum Devices</Label>
                   <Input
@@ -225,7 +303,11 @@ export default function UpdateKeyDialog({ id,onCloseDropdown }: UpdateKeyDialogP
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting || (hasExpiration && !expirationTime) || !hasChanges()}
+            >
               {isSubmitting ? "Updating..." : "Update Key"}
             </Button>
           </form>
