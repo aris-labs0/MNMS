@@ -7,10 +7,13 @@
   "dependencies": {
     "@hono/node-server": "^1.14.1",
     "@mnms/db": "workspace:*",
+    "@mnms/influx": "workspace:*",
     "dotenv": "^16.4.7",
-    "hono": "^4.7.7"
+    "hono": "^4.7.7",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.16",
     "@types/node": "^20.11.17",
     "tsx": "^4.7.1"
   }
