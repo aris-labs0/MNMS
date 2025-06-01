@@ -76,8 +76,22 @@ const nameFilterFn: FilterFn<Key> = (row, columnId, filterValue) => {
 // Filter function for expiration status - adaptado al nuevo modelo
 const expirationFilterFn: FilterFn<Key> = (row, columnId, filterValue: string[]) => {
   if (!filterValue?.length) return true
-  const hasExpiration = row.original.expiration_time !== null
-  return filterValue.includes(hasExpiration ? "Expires" : "No Expiration")
+
+  const expirationTime = row.original.expiration_time
+  const now = new Date()
+
+  if (!expirationTime) {
+    return filterValue.includes("No Expiration")
+  }
+
+  const expirationDate = new Date(expirationTime)
+  const isExpired = now > expirationDate
+
+  if (isExpired) {
+    return filterValue.includes("Expired")
+  }
+
+  return filterValue.includes("Active")
 }
 
 // Filter function for device limit status - adaptado al nuevo modelo
@@ -142,21 +156,35 @@ const columns: ColumnDef<Key>[] = [
     header: "Expiration",
     accessorKey: "expiration",
     cell: ({ row }) => {
-      const expires = row.original.expiration_time !== null
+      const expirationTime = row.original.expiration_time
+      const now = new Date()
+
+      if (!expirationTime) {
+        return (
+          <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground">
+            <TimerOffIcon size={14} className="mr-1" />
+            No Expiration
+          </Badge>
+        )
+      }
+
+      const expirationDate = new Date(expirationTime)
+      const isExpired = now > expirationDate
+
+      if (isExpired) {
+        return (
+          <Badge variant="destructive">
+            <CircleXIcon size={14} className="mr-1" />
+            Expired
+          </Badge>
+        )
+      }
+
       return (
-        <div>
-          {expires ? (
-            <Badge>
-              <TimerIcon size={14} className="mr-1" />
-              {row.original.expiration_time ? new Date(row.original.expiration_time).toLocaleDateString() : "Expires"}
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground">
-              <TimerOffIcon size={14} className="mr-1" />
-              No Expiration
-            </Badge>
-          )}
-        </div>
+        <Badge>
+          <TimerIcon size={14} className="mr-1" />
+          {expirationDate.toLocaleDateString()}
+        </Badge>
       )
     },
     size: 180,
@@ -196,18 +224,6 @@ export default function Component() {
 
   const { data, isLoading, error } = api.keys.getKeys.useQuery()
 
-  const handleDeleteRows = () => {
-    // This would need to be implemented with a tRPC mutation
-    // For now, we'll just log the selected rows
-    const selectedRows = table.getSelectedRowModel().rows
-    console.log(
-      "Delete rows:",
-      selectedRows.map((row) => row.original.id),
-    )
-    // After successful deletion, you would refetch the data
-    table.resetRowSelection()
-  }
-
   const table = useReactTable({
     data: data || [],
     columns,
@@ -232,7 +248,7 @@ export default function Component() {
 
   // Get unique expiration values
   const uniqueExpirationValues = useMemo(() => {
-    return ["Expires", "No Expiration"]
+    return ["Active", "Expired", "No Expiration"]
   }, [])
 
   // Get unique device limit values
