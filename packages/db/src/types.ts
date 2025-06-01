@@ -5,7 +5,7 @@ import { z } from "zod"
 import {
     zDevicesSchema,
     zkeysSchema,
-    
+    zSitesSchema
 } from "./zod-schemas"
 
 export type dbClient = NeonHttpDatabase<typeof schema> & {
@@ -22,4 +22,9 @@ export type selectDevices = z.infer<typeof zDevicesSchema.selectDevicesSchema>
 
 export type createDeviceInterface = z.infer<typeof zDevicesSchema.createDeviceInterfaceSchema>
 export type updateDeviceInterface = z.infer<typeof zDevicesSchema.updateDeviceInterfaceSchema>
-export type selectDeviceInterface = z.infer<typeof zDevicesSchema.selectDeviceInterfacesSchema>
+export type selectDeviceInterfaces = z.infer<typeof zDevicesSchema.selectDeviceInterfacesSchema>
+
+export type createSite = z.infer<typeof zSitesSchema.createSiteSchema>
+export type updateSite = z.infer<typeof zSitesSchema.updateSiteSchema>
+export type selectSites = z.infer<typeof zSitesSchema.selectSitesSchema>
+

@@ -5,11 +5,11 @@ import {
     timestamp,
     integer,
     bigint,
-    interval,
     boolean,
     jsonb
 } from "drizzle-orm/pg-core";
-            
+import {sites} from "./sites";       
+
 export const devices = pgTable("devices", {
     id: uuid("id").primaryKey().defaultRandom(),
     serial: text('serial').unique().notNull(),
@@ -37,12 +37,14 @@ export const devices = pgTable("devices", {
     firmwareType: text('firmware_type'),
     model: text('model'),
     routerboard: boolean('routerboard'),
+    site_id: uuid('site_id').references(() => sites.id),
+    status: boolean('status'),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 
 
 export const deviceInterfaces = pgTable('device_interfaces', {
     deviceId: uuid('device_id').primaryKey().notNull().references(() => devices.id),
-    interfaces: jsonb('interfaces').notNull(),
+    interfaces: jsonb('interfaces').notNull().$type<any[]>(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
