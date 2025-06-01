@@ -1,5 +1,7 @@
 import { keysRouter } from "@/trpc/api/routers/keys";
 import { createCallerFactory, createTRPCRouter } from "@/trpc/api/trpc";
+import { dashboardRouter } from "@/trpc/api/routers/dashboard";
+import { devicesRouter } from "@/trpc/api/routers/devices";
 
 /**
  * This is the primary router for your server.
@@ -8,6 +10,8 @@ import { createCallerFactory, createTRPCRouter } from "@/trpc/api/trpc";
  */
 export const appRouter = createTRPCRouter({
 	keys: keysRouter,
+	dashboard:dashboardRouter,
+	devices:devicesRouter
 });
 
 // export type definition of API
