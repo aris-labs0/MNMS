@@ -32,7 +32,7 @@ const services = {
          {
           id:device.id,
           serial:telemetry.device.serial,
-          exp: Math.floor(Date.now() / 1000) + 5
+  
         },
         process.env.JWT_SECRET!
       )
