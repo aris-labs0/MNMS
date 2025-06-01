@@ -1,6 +1,11 @@
 import {queryApi} from "../index"
 
-export async function getDeviceTelemetry(device_id: string) {
+type DeviceTelemetry ={
+  voltage :{ time: string; value: number }[],
+  temperature : { time: string; value: number }[],
+  cpu_load : { time: string; value: number }[]
+}
+export async function getDeviceTelemetry(device_id: string):Promise<DeviceTelemetry> {
     const fluxQuery = `
       from(bucket: "${process.env.INFLUX_BUCKET!}")
         |> range(start: -1h)
@@ -131,4 +136,36 @@ export async function getInterfaceTelemetry(device_id: string,interface_id:strin
         }
       });
     });
+}
+type status= { time: string; status: number }[]
+
+export async function getStatusHistory():Promise<status>{
+  const fluxQuery = `
+  from(bucket: "${process.env.INFLUX_BUCKET!}")
+    |> range(start: -1h)
+    |> filter(fn: (r) => r._measurement == "global_status")
+`;
+
+const status: status = [];
+
+
+return new Promise((resolve, reject) => {
+  queryApi.queryRows(fluxQuery, {
+    next(row, tableMeta) {
+      const o = tableMeta.toObject(row);
+      status.push({ time: o._time, status: o._value });
+  
+      
+    },
+    error(error) {
+      console.error("Query error", error);
+      reject(error);
+    },
+    complete() {
+      resolve(
+        status
+      );
+    }
+  });
+});
 }
