@@ -128,8 +128,7 @@ export const keysRouter = createTRPCRouter({
 
   getKeys: protectProcedure.query(async ({ ctx }) => {
     try {
-      const allKeys = await getAllKeys(ctx.db)
-      return allKeys
+      return await getAllKeys(ctx.db)
     } catch (error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
