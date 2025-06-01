@@ -2,16 +2,10 @@
 
 import * as React from "react"
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
   Key,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
+  LayoutDashboard,
+  Network,
+  Radar,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -29,16 +23,32 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
-import { Network } from 'lucide-react';
 
 // This is sample data.
 const data = {
   projects: [
     {
+      name: "Dashboard",
+      url: "/",
+      icon: LayoutDashboard,
+    },
+    {
+      name: "Devices",
+      url: "/devices",
+      icon: Network,
+    },
+    //{
+    //  name: "Discovery",
+    //  url: "/discovery",
+    //  icon: Radar,
+    //},
+    {
       name: "Keys",
       url: "/keys",
       icon: Key,
     },
+
+
   ],
 }
 
